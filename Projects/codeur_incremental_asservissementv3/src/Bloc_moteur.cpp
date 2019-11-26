@@ -104,3 +104,46 @@ void Bloc_moteur::motors_on() // il faut activer les moteurs pour qu'il puisse r
 {
     moteurs_arret = 0;
 }
+
+void Bloc_moteur::commande_vitesse(float vitesse_G, float vitesse_D)
+{ //fonction pour commander les moteurs sans avoir à utiliser set_PWM
+
+    int sens_G = signe(vitesse_G);
+    int sens_D = signe(vitesse_D);
+    double vitesse_local_G = abs(vitesse_G);
+    double vitesse_local_D = abs(vitesse_D);
+
+    if (abs(vitesse_G) > PWM_MAX)
+    {
+        vitesse_local_G = PWM_MAX;
+    }
+    if (abs(vitesse_G) < 10)
+    {
+        vitesse_local_G = 10;
+    }
+    if (abs(vitesse_D) > PWM_MAX)
+    {
+        vitesse_local_D = PWM_MAX;
+    }
+    if (abs(vitesse_D) < 10)
+    {
+        vitesse_local_D = 10;
+    };
+    int VG_int = (int)vitesse_local_G * sens_G * COEFF_MOTEUR_G;
+    int VD_int = (int)vitesse_local_D * sens_D * COEFF_MOTEUR_D;
+    float VG_f = vitesse_local_G * sens_G * COEFF_MOTEUR_G;
+    float VD_f = vitesse_local_D * sens_D * COEFF_MOTEUR_D;
+    float centieme_D = (VD_f - VD_int) * 100;
+    float centieme_G = (VG_f - VG_int) * 100;
+    if ((rand() % 100) < centieme_G)
+    {
+        VG_int += 1;
+    }
+    if ((rand() % 100) < centieme_D)
+    {
+        VD_int += 1;
+    }
+    //printf("vitesseG : %f, vitesseD : %f, %d, %d", VG_f, VD_f, VG_int, VD_int);
+    set_PWM_moteur_G(-VG_int); //le branchements des moteurs est à vérifier ( fonctionne dans l'état actuel du robots
+    set_PWM_moteur_D(-VD_int); //
+}

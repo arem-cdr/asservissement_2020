@@ -84,3 +84,99 @@ double Asservissement_Position::get_angle_deg()
 {
     return angle_actuel * 180.0 / PI;
 }
+
+void Asservissement_Position::rotation_rel(double angle_vise)
+{
+    // rotation de angle_vise
+    _motors->motors_on();
+    double vitesse = 180;
+    int sens;
+    angle_vise += get_angle_deg();
+    borne_angle_d(angle_vise);
+    if (diff_angle(get_angle_deg(), angle_vise) <= 0)
+    {
+        sens = -1;
+    }
+    else
+    {
+        sens = 1;
+    }
+    while ((sens * diff_angle(get_angle_deg(), angle_vise) > 0) || abs(diff_angle(get_angle_deg(), angle_vise)) > 100)
+    {
+        actualise_position();
+        vitesse = 3 * sens * abs(diff_angle(get_angle_deg(), angle_vise));
+        if (vitesse > 90)
+        {
+            vitesse = 90;
+        }
+        if (vitesse < -90)
+        {
+            vitesse = -90;
+        }
+        _motors->commande_vitesse(-vitesse, vitesse);
+    }
+
+    _motors->commande_vitesse(0, 0);
+    wait(0.1);
+    _motors->motors_stop_hard_hiz();
+}
+
+void Asservissement_Position::ligne_droite_basique(double distance)
+{
+    // le robot avance en ligne droite sur une distance donnée, à la vitesse voulue (entre 0 et 900)
+    _motors->motors_on();
+    actualise_position();
+    double x_ini = position_actuel.get_x();
+    double y_ini = position_actuel.get_y();
+    double angle_vise_deg = angle_actuel;
+    double angle_vise = angle_vise_deg * PI / 180.0;
+
+    double x_local_ini = x_ini * cos(angle_vise) + y_ini * sin(angle_vise);
+    double y_local_ini = y_ini * cos(angle_vise) - x_ini * sin(angle_vise);
+
+    double x_actuel = position_actuel.get_x();
+    double y_actuel = position_actuel.get_y();
+
+    double x_local = x_actuel * cos(angle_vise) + y_actuel * sin(angle_vise) - x_local_ini;
+    double y_local = y_actuel * cos(angle_vise) - x_actuel * sin(angle_vise) - y_local_ini;
+
+    //long int y_local_prec = y_local;
+    float vitesse_G;
+    float vitesse_D;
+
+    float Kpp = 0.05;
+    float Kdp = 10;
+    while (distance - x_local > 0)
+    {
+        vitesse_G = (distance - x_local) / 70;
+        vitesse_D = vitesse_G;
+        if (vitesse_G > 400)
+        {
+            vitesse_G = 400;
+            vitesse_D = 400;
+        }
+        if (vitesse_G < -400)
+        {
+            vitesse_G = -400;
+            vitesse_D = -400;
+        }
+        double angle_actuel = get_angle_deg();
+        vitesse_G = vitesse_G + Kpp * y_local + Kdp * diff_angle(angle_vise_deg, angle_actuel);
+        vitesse_D = vitesse_D - Kpp * y_local - Kdp * diff_angle(angle_vise_deg, angle_actuel);
+
+        actualise_position();
+        x_actuel = position_actuel.get_x();
+        y_actuel = position_actuel.get_y();
+        _motors->commande_vitesse(vitesse_G, vitesse_D);
+        x_local = x_actuel * cos(angle_vise) + y_actuel * sin(angle_vise) - x_local_ini;
+        y_local = y_actuel * cos(angle_vise) - x_actuel * sin(angle_vise) - y_local_ini;
+    }
+    rotation_abs(angle_vise_deg);
+}
+
+void Asservissement_Position::rotation_abs(double angle_vise)
+{
+    actualise_position();
+    double angle_rel = borne_angle_d(angle_vise - get_angle_deg());
+    rotation_rel(angle_rel);
+}

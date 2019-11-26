@@ -23,7 +23,8 @@ int main()
     }
   }
   pc.printf("Init done ! \n");
-
+  Asser.ligne_droite_basique(30000);
+  Asser.rotation_rel(180);
   while (1)
   {
     Asser.actualise_position();

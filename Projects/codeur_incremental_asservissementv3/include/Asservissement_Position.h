@@ -17,12 +17,14 @@ public:
     ~Asservissement_Position();
 
     Vector2 get_position() const { return position_actuel; }
-    void rotation(double angle);
-    void ligne_droite(double distance);
     void va_au_point(Vector2 position);
     double get_angle_deg();
     double get_angle_rad() const { return angle_actuel; }
     void actualise_position();
+
+    void ligne_droite_basique(double distance);
+    void rotation_rel(double angle_vise);
+    void rotation_abs(double angle_vise);
 
 private:
     Codeur *_codeurG;

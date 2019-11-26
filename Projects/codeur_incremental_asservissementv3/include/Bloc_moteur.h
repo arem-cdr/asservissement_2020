@@ -4,11 +4,12 @@
 #include "XNucleoIHM02A1.h"
 #include "Codeur.h"
 #include "DevSPI.h"
-
+#include "math_precalc.h"
 #include "Codeur.h"
 
 #define PWM_MAX 900
-
+#define COEFF_MOTEUR_G 1
+#define COEFF_MOTEUR_D 1
 class Bloc_moteur
 {
 private:
@@ -82,6 +83,7 @@ public:
   // Methodes pour définir la tension affectée à chaque moteur
   void set_PWM_moteur_D(int PWM);
   void set_PWM_moteur_G(int PWM);
+  void commande_vitesse(float vitesse_G, float vitesse_D);
   // Methode pour bloquer les moteurs
   void motors_stop_hard_hiz();
   void motors_stop_low_hiz();
