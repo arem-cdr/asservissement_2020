@@ -1,5 +1,4 @@
 #include "Asservissement_Position.h"
-// branch 1
 
 Asservissement_Position::Asservissement_Position()
 {
@@ -181,3 +180,6 @@ void Asservissement_Position::rotation_abs(double angle_vise)
     double angle_rel = borne_angle_d(angle_vise - get_angle_deg());
     rotation_rel(angle_rel);
 }
+
+
+// branch 2
