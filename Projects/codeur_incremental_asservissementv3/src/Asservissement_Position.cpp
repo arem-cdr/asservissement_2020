@@ -1,5 +1,6 @@
 #include "Asservissement_Position.h"
 // branch 1
+// salut
 
 Asservissement_Position::Asservissement_Position()
 {
@@ -19,7 +20,7 @@ Asservissement_Position::~Asservissement_Position()
     delete _codeurG;
     delete _motors;
 }
-
+// ceci est un test de branching et de pull requests
 void Asservissement_Position::actualise_position()
 {
     /*
