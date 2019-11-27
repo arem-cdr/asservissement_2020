@@ -3,6 +3,7 @@
 #include "Codeur.h"
 #include "Asservissement_Position.h"
 #include "Vector2.h"
+#include "StateMachine.h"
 
 int main()
 {
