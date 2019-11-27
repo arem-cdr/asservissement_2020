@@ -75,7 +75,7 @@ void Asservissement_Position::actualise_position()
         _transform->set_y(cy - R * cos(angle_actuel));
     }
     else if (dep_roue_G == dep_roue_D)
-    {                                                                                    // cas où la trajectoire est une parfaite ligne droite
+    {                                                                            // cas où la trajectoire est une parfaite ligne droite
         _transform->set_x(_transform->get_x() + dep_roue_G * cos(angle_actuel)); //à améliorer
         _transform->set_y(_transform->get_y() + dep_roue_D * sin(angle_actuel));
     }
@@ -117,61 +117,40 @@ void Asservissement_Position::rotation_rel(double angle_vise)
     }
 
     _motors->commande_vitesse(0, 0);
-    wait(0.1);
+    wait_us(10000);
     _motors->motors_stop_hard_hiz();
 }
 
-void Asservissement_Position::ligne_droite_basique(double distance)
+bool Asservissement_Position::ligne_droite_basique(double distance)
 {
-    // le robot avance en ligne droite sur une distance donnée, à la vitesse voulue (entre 0 et 900)
     _motors->motors_on();
-    actualise_position();
-    double x_ini = _transform->get_x();
-    double y_ini = _transform->get_y();
-    double angle_vise_deg = _transform->get_angle();
-    double angle_vise = angle_vise_deg * PI / 180.0;
-
-    double x_local_ini = x_ini * cos(angle_vise) + y_ini * sin(angle_vise);
-    double y_local_ini = y_ini * cos(angle_vise) - x_ini * sin(angle_vise);
-
-    double x_actuel = _transform->get_x();
-    double y_actuel = _transform->get_y();
-
-    double x_local = x_actuel * cos(angle_vise) + y_actuel * sin(angle_vise) - x_local_ini;
-    double y_local = y_actuel * cos(angle_vise) - x_actuel * sin(angle_vise) - y_local_ini;
-
-    //long int y_local_prec = y_local;
-    float vitesse_G;
-    float vitesse_D;
-
-    float Kpp = 0.05;
-    float Kdp = 10;
-    while (distance - x_local > 0)
+    if (premiere_ligne_droite)
     {
+        actualise_position();
+        create_repere_local();
+        update_position_local();
+        premiere_ligne_droite = false;
+    }
+
+    if (distance - x_local > 0)
+    {
+        actualise_position();
+        update_position_local();
         vitesse_G = (distance - x_local) / 70;
         vitesse_D = vitesse_G;
-        if (vitesse_G > 400)
-        {
-            vitesse_G = 400;
-            vitesse_D = 400;
-        }
-        if (vitesse_G < -400)
-        {
-            vitesse_G = -400;
-            vitesse_D = -400;
-        }
-        double angle_actuel = get_angle_deg();
-        vitesse_G = vitesse_G + Kpp * y_local + Kdp * diff_angle(angle_vise_deg, angle_actuel);
-        vitesse_D = vitesse_D - Kpp * y_local - Kdp * diff_angle(angle_vise_deg, angle_actuel);
+        bridage_moteur(400);
 
-        actualise_position();
-        x_actuel = _transform->get_x();
-        y_actuel = _transform->get_y();
+        double angle_actuel = get_angle_deg();
+        vitesse_G = vitesse_G + Kpp * y_local + Kdp * diff_angle(angle_rep_local_deg, angle_actuel);
+        vitesse_D = vitesse_D - Kpp * y_local - Kdp * diff_angle(angle_rep_local_deg, angle_actuel);
         _motors->commande_vitesse(vitesse_G, vitesse_D);
-        x_local = x_actuel * cos(angle_vise) + y_actuel * sin(angle_vise) - x_local_ini;
-        y_local = y_actuel * cos(angle_vise) - x_actuel * sin(angle_vise) - y_local_ini;
+        return false;
     }
-    rotation_abs(angle_vise_deg);
+    else
+    {
+        rotation_abs(angle_rep_local_deg);
+        return true;
+    }
 }
 
 void Asservissement_Position::rotation_abs(double angle_vise)
@@ -188,4 +167,36 @@ void Asservissement_Position::deplacement_non_bloquant(Vector2 target_pos)
 
     /*double local_x = position_actuel.get_x() * cos()
     double distance =*/
+}
+
+void Asservissement_Position::create_repere_local()
+{
+    double x_ini = _transform->get_x();
+    double y_ini = _transform->get_y();
+    angle_rep_local_deg = _transform->get_angle();
+    angle_rep_local = angle_rep_local_deg * PI / 180.0;
+    x_local_ini = x_ini * cos(angle_rep_local) + y_ini * sin(angle_rep_local);
+    y_local_ini = y_ini * cos(angle_rep_local) - x_ini * sin(angle_rep_local);
+}
+
+void Asservissement_Position::update_position_local()
+{
+    double x_actuel = _transform->get_x();
+    double y_actuel = _transform->get_y();
+    x_local = x_actuel * cos(angle_rep_local) + y_actuel * sin(angle_rep_local) - x_local_ini;
+    y_local = y_actuel * cos(angle_rep_local) - x_actuel * sin(angle_rep_local) - y_local_ini;
+}
+
+void Asservissement_Position::bridage_moteur(int vmax)
+{
+    if (vitesse_G > vmax)
+    {
+        vitesse_G = vmax;
+        vitesse_D = vmax;
+    }
+    if (vitesse_G < -vmax)
+    {
+        vitesse_G = -vmax;
+        vitesse_D = -vmax;
+    }
 }
