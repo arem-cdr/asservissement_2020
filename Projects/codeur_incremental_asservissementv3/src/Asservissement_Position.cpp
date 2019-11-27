@@ -1,14 +1,13 @@
 #include "Asservissement_Position.h"
-// branch 1
 
 Asservissement_Position::Asservissement_Position()
 {
     _codeurD = new Codeur(D5, D6 /*, D0*/);
     _codeurG = new Codeur(D8, D9 /*, D1*/);
     _motors = new Bloc_moteur;
-    position_actuel.set_x(0);
-    position_actuel.set_y(0);
-    angle_actuel = 0;
+
+    _transform = new Transform();
+
     nbr_tick_D_prec = 0;
     nbr_tick_G_prec = 0;
 }
@@ -18,6 +17,7 @@ Asservissement_Position::~Asservissement_Position()
     delete _codeurD;
     delete _codeurG;
     delete _motors;
+    delete _transform;
 }
 
 void Asservissement_Position::actualise_position()
@@ -41,6 +41,8 @@ void Asservissement_Position::actualise_position()
     double dep_roue_G = nbr_tick_G_actuel * DISTANCE_PAR_TICK_G; // deplacement des roues
     double dep_roue_D = nbr_tick_D_actuel * DISTANCE_PAR_TICK_D;
 
+    double angle_actuel = _transform->get_angle();
+
     /*------calcul de la trajectoire---------*/
 
     // determination du cercle décrit par la trajectoire et de la vitesse du robot sur ce cercle
@@ -53,8 +55,8 @@ void Asservissement_Position::actualise_position()
         double cy = 0;
 
         R = ECART_ROUES / 2 * (dep_roue_D + dep_roue_G) / (dep_roue_D - dep_roue_G); // rayon du cercle
-        cx = position_actuel.get_x() - R * sin(angle_actuel);
-        cy = position_actuel.get_y() + R * cos(angle_actuel);
+        cx = _transform->get_x() - R * sin(angle_actuel);
+        cy = _transform->get_y() + R * cos(angle_actuel);
         d = (dep_roue_G + dep_roue_D) / 2;
 
         // mise à jour des coordonnées du robot
@@ -69,21 +71,18 @@ void Asservissement_Position::actualise_position()
 
         angle_actuel = borne_angle_r(angle_actuel);
 
-        position_actuel.set_x(cx + R * sin(angle_actuel));
-        position_actuel.set_y(cy - R * cos(angle_actuel));
+        _transform->set_x(cx + R * sin(angle_actuel));
+        _transform->set_y(cy - R * cos(angle_actuel));
     }
     else if (dep_roue_G == dep_roue_D)
     {                                                                                    // cas où la trajectoire est une parfaite ligne droite
-        position_actuel.set_x(position_actuel.get_x() + dep_roue_G * cos(angle_actuel)); //à améliorer
-        position_actuel.set_y(position_actuel.get_y() + dep_roue_D * sin(angle_actuel));
+        _transform->set_x(_transform->get_x() + dep_roue_G * cos(angle_actuel)); //à améliorer
+        _transform->set_y(_transform->get_y() + dep_roue_D * sin(angle_actuel));
     }
 
-    //printf("tick d : %d, tick g : %d, x : %lf, y : %lf. angle : %lf\n", nbr_tick_D, nbr_tick_G, x_actuel, y_actuel, angle*180/PI);
-}
+    _transform->set_angle(angle_actuel);
 
-double Asservissement_Position::get_angle_deg()
-{
-    return angle_actuel * 180.0 / PI;
+    //printf("tick d : %d, tick g : %d, x : %lf, y : %lf. angle : %lf\n", nbr_tick_D, nbr_tick_G, x_actuel, y_actuel, angle*180/PI);
 }
 
 void Asservissement_Position::rotation_rel(double angle_vise)
@@ -127,16 +126,16 @@ void Asservissement_Position::ligne_droite_basique(double distance)
     // le robot avance en ligne droite sur une distance donnée, à la vitesse voulue (entre 0 et 900)
     _motors->motors_on();
     actualise_position();
-    double x_ini = position_actuel.get_x();
-    double y_ini = position_actuel.get_y();
-    double angle_vise_deg = angle_actuel;
+    double x_ini = _transform->get_x();
+    double y_ini = _transform->get_y();
+    double angle_vise_deg = _transform->get_angle();
     double angle_vise = angle_vise_deg * PI / 180.0;
 
     double x_local_ini = x_ini * cos(angle_vise) + y_ini * sin(angle_vise);
     double y_local_ini = y_ini * cos(angle_vise) - x_ini * sin(angle_vise);
 
-    double x_actuel = position_actuel.get_x();
-    double y_actuel = position_actuel.get_y();
+    double x_actuel = _transform->get_x();
+    double y_actuel = _transform->get_y();
 
     double x_local = x_actuel * cos(angle_vise) + y_actuel * sin(angle_vise) - x_local_ini;
     double y_local = y_actuel * cos(angle_vise) - x_actuel * sin(angle_vise) - y_local_ini;
@@ -166,8 +165,8 @@ void Asservissement_Position::ligne_droite_basique(double distance)
         vitesse_D = vitesse_D - Kpp * y_local - Kdp * diff_angle(angle_vise_deg, angle_actuel);
 
         actualise_position();
-        x_actuel = position_actuel.get_x();
-        y_actuel = position_actuel.get_y();
+        x_actuel = _transform->get_x();
+        y_actuel = _transform->get_y();
         _motors->commande_vitesse(vitesse_G, vitesse_D);
         x_local = x_actuel * cos(angle_vise) + y_actuel * sin(angle_vise) - x_local_ini;
         y_local = y_actuel * cos(angle_vise) - x_actuel * sin(angle_vise) - y_local_ini;
@@ -180,4 +179,13 @@ void Asservissement_Position::rotation_abs(double angle_vise)
     actualise_position();
     double angle_rel = borne_angle_d(angle_vise - get_angle_deg());
     rotation_rel(angle_rel);
+}
+
+void Asservissement_Position::deplacement_non_bloquant(Vector2 target_pos)
+{
+    _motors->motors_on();
+    actualise_position();
+
+    /*double local_x = position_actuel.get_x() * cos()
+    double distance =*/
 }

@@ -30,6 +30,16 @@ void Vector2::set_y(double p_y)
     y = p_y;
 }
 
+void Vector2::add_x(double delta_x)
+{
+    x += delta_x;
+}
+
+void Vector2::add_y(double delta_y)
+{
+    y += delta_y;
+}
+
 double Vector2::Magnitude()
 {
     return pow((pow(x, 2.0f) + pow(y, 2.0f)), 0.5f);
