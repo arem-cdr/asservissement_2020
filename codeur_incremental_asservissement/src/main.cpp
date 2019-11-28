@@ -8,11 +8,10 @@
 int main()
 {
   RawSerial pc(USBTX, USBRX);
-
+  int i = 0;
   pc.printf("Start ! \n");
   DigitalIn button(USER_BUTTON);
   Vector2 pos;
-  double angle;
   bool go = false;
 
   Asservissement_Position Asser;
@@ -24,13 +23,17 @@ int main()
     }
   }
   pc.printf("Init done ! \n");
-  Asser.ligne_droite_basique(30000);
-  Asser.rotation_rel(180);
-  while (1)
+  bool b = false;
+  while (!b)
+  {
+    b = Asser.ligne_droite_basique(30000);
+    printf("b : %d\n", b);
+  }
+  /*while (1)
   {
     Asser.actualise_position();
     pos = Asser.get_position();
     angle = Asser.get_angle_deg();
     pc.printf("x : %lf, y : %lf, a : %lf\n", pos.get_x(), pos.get_y(), angle);
-  }
+  }*/
 }
