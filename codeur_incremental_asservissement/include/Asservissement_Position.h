@@ -11,6 +11,14 @@
 #define DISTANCE_PAR_TICK_D 8.43
 #define ECART_ROUES 30000
 
+// Juste une enumeration utilisee dans la StateMachine
+enum struct State {
+    NONE = 0,
+    IDLE = 1,
+    LIGNEDROITE = 2,
+    VIRAGE = 3
+};
+
 class Asservissement_Position
 {
 public:
@@ -30,13 +38,23 @@ public:
     void trans_global_to_local();
     void set_premiere_ligne_droite(bool b) { premiere_ligne_droite = b; }
 
+    // SETTERS
+    void set_consigne(State consigne);
+    void set_info_consigne(double x, double y, double angle);
+
+    bool go_to_target();
+    bool turn_to_abs_angle();
+    State get_consigne();
+    Transform get_info_consigne();
+    Vector2 get_delta_to_consigne();
+
+    double shortest_delta_angle(double delta_angle);
+
 private:
     Codeur *_codeurG;
     Codeur *_codeurD;
     Bloc_moteur *_motors;
     Timer time;
-
-    Transform *_transform;
 
     bool premiere_ligne_droite = false;
 
@@ -53,9 +71,15 @@ private:
     //commande vitess
     float vitesse_G;
     float vitesse_D;
-    float Kpp = 0.05;
-    float Kdp = 10;
+    float Kpp = 0.0005;//0.005
+    float Kdp = 40.0; // 10.0
     void bridage_moteur(int vmax);
     long int nbr_tick_D_prec;
     long int nbr_tick_G_prec;
+
+    // AVEC LES TRANSFORM:
+    Transform *_transform;
+
+    Transform *_info_consigne;
+    State _consigne;
 };

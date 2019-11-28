@@ -1,5 +1,5 @@
 #include "Vector2.h"
-#include "math.h"
+#include "math_precalc.h"
 
 Vector2::Vector2()
 {
@@ -54,13 +54,13 @@ void Vector2::Normalize()
 
 double Vector2::calculate_angle()
 {
-    if (y >= 0)
+    if (x >= 0)
     {
-        return atan(-x / y);
+        return atan(y / x);
     }
     else
     {
-        return M_PI - atan(x / y);
+        return PI - atan(-y / x);
     }
 }
 
