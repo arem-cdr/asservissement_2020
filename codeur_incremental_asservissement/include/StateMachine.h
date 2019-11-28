@@ -2,6 +2,7 @@
 
 #include "mbed.h"
 #include "Vector2.h"
+#include "Asservissement_Position.h"
 
 enum State {
     NONE,
@@ -16,8 +17,10 @@ class StateMachine
         State _state;
         double _distance;
         double _angle;
+        Asservissement_Position* _parent_asser;
     public:
-        StateMachine();
+        StateMachine(Asservissement_Position* parent_asser);
+        ~StateMachine();
         void _update_machine();
         void _state_logic();
         State _get_transition();

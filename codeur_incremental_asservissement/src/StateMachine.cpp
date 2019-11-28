@@ -1,8 +1,15 @@
 #include "StateMachine.h"
+#include "Bloc_moteur.h"
 
-StateMachine::StateMachine()
+StateMachine::StateMachine(Asservissement_Position* parent_asser)
 {
     _state = NONE;
+    _parent_asser = parent_asser;
+}
+
+StateMachine::~StateMachine()
+{
+
 }
 
 void StateMachine::_update_machine()
@@ -30,15 +37,16 @@ State StateMachine::_get_transition()
     switch(_state)
     {
         case IDLE:
-
+            return NONE;
             break;
         case LIGNEDROITE:
-
+            return NONE;
             break;
         case VIRAGE:
-            
+            return NONE;
             break;
         default:
+            return NONE;
             break;
     }
 }

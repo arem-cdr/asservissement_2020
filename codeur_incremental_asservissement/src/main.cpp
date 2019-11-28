@@ -36,4 +36,12 @@ int main()
     angle = Asser.get_angle_deg();
     pc.printf("x : %lf, y : %lf, a : %lf\n", pos.get_x(), pos.get_y(), angle);
   }*/
+
+  /* CODE POUR LE TEST DE LA STATEMACHINE
+  StateMachine sm(IDLE, &Asser);
+  while(1)
+  {
+    Asser.actualise_position();
+    sm.update_machine();
+  }*/
 }
