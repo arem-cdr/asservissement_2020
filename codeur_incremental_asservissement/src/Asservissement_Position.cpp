@@ -213,18 +213,18 @@ bool Asservissement_Position::go_to_target()
     double delta_angle_consigne = shortest_delta_angle(consigne_locale.calculate_angle() - _transform->get_angle());
     double distance_to_target = consigne_locale.Magnitude();    
     //printf("a:%lf\ndelta:%lf\ndist:%lf\n\n", _transform->get_angle()*180/PI, delta_angle_consigne*180/PI, distance_to_target);
-    printf("%lf %lf %lf %lf %lf %lf\n", _transform->get_x(), _transform->get_y(), _transform->get_angle()*180/PI, _info_consigne->get_x(), _info_consigne->get_y(), _info_consigne->get_angle()*180/PI);
+    printf("%lf %lf %lf %lf %lf %lf delta:%lf\n", _transform->get_x(), _transform->get_y(), _transform->get_angle()*180/PI, _info_consigne->get_x(), _info_consigne->get_y(), _info_consigne->get_angle()*180/PI, delta_angle_consigne);
 
 
     if(distance_to_target > 5000.0)
     {
         double signG = 1.0;
         double signD = 1.0;
-        if(delta_angle_consigne < -PI/20)
+        if(delta_angle_consigne < -PI/4)
         {
             signD = -1.0;
         }
-        else if(delta_angle_consigne > PI/20)
+        else if(delta_angle_consigne > PI/4)
         {
             signG = -1.0;
         }
@@ -307,11 +307,11 @@ double Asservissement_Position::shortest_delta_angle(double delta_angle)
 {
     if(delta_angle < -PI)
     {
-        return - (PI - delta_angle);
+        return delta_angle + 2*PI;
     }
     else if(delta_angle > PI)
     {
-        return PI - delta_angle;
+        return delta_angle - 2*PI;
     }
     else
     {
