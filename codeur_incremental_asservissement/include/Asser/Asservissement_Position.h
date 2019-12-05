@@ -32,7 +32,6 @@ public:
     void actualise_position();
 
     bool ligne_droite_basique(double distance);
-    void deplacement_non_bloquant(Vector2 target_pos);
     void rotation_rel(double angle_vise);
     void rotation_abs(double angle_vise);
     void trans_global_to_local();
@@ -43,18 +42,22 @@ public:
     void set_info_consigne(double x, double y, double angle);
 
     bool go_to_target();
+    bool straight_line(double distance);
     bool turn_to_abs_angle();
     State get_consigne();
     Transform get_info_consigne();
     Vector2 get_delta_to_consigne();
 
     double shortest_delta_angle(double delta_angle);
+    bool _check_sampling_time();
 
 private:
     Codeur *_codeurG;
     Codeur *_codeurD;
     Bloc_moteur *_motors;
     Timer time;
+    double _sampling_time = 10; // echantillonnage en ms
+    double _last_t;
 
     bool premiere_ligne_droite = false;
 

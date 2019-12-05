@@ -14,6 +14,7 @@ StateMachine::~StateMachine()
 
 void StateMachine::_update_machine()
 {
+    //printf("state:%d\n", _state);
     State transition = _get_transition();
     if(transition != State::NONE)
     {
