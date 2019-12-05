@@ -144,6 +144,6 @@ void Bloc_moteur::commande_vitesse(float vitesse_G, float vitesse_D)
         VD_int += 1;
     }
     //printf("vitesseG : %f, vitesseD : %f, %d, %d", VG_f, VD_f, VG_int, VD_int);
-    set_PWM_moteur_G(-VG_int); //le branchements des moteurs est à vérifier ( fonctionne dans l'état actuel du robots
-    set_PWM_moteur_D(-VD_int); //
+    set_PWM_moteur_G(-VG_int/4); //le branchements des moteurs est à vérifier ( fonctionne dans l'état actuel du robots
+    set_PWM_moteur_D(-VD_int/4); //
 }
