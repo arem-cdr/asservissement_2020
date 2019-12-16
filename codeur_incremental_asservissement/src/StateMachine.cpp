@@ -35,6 +35,11 @@ void StateMachine::_state_logic()
     {
         _parent_asser->turn_to_abs_angle();
     }
+    else
+    {
+        _parent_asser->idle();
+    }
+    
 }
 
 State StateMachine::_get_transition()

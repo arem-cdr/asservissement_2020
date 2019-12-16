@@ -29,7 +29,7 @@ public:
     void va_au_point(Vector2 position);
     double get_angle_deg() const { return _transform->get_angle() * 180.0 / PI; }
     double get_angle_rad() const { return _transform->get_angle(); }
-    void actualise_position();
+    void _actualise_position();
 
     bool ligne_droite_basique(double distance);
     void rotation_rel(double angle_vise);
@@ -41,14 +41,15 @@ public:
     void set_consigne(State consigne);
     void set_info_consigne(double x, double y, double angle);
 
+    void idle();
     bool go_to_target();
-    bool straight_line(double distance);
+    bool _straight_line(double distance);
     bool turn_to_abs_angle();
     State get_consigne();
     Transform get_info_consigne();
     Vector2 get_delta_to_consigne();
 
-    double shortest_delta_angle(double delta_angle);
+    double _shortest_delta_angle(double delta_angle);
     bool _check_sampling_time();
 
 private:
@@ -56,7 +57,7 @@ private:
     Codeur *_codeurD;
     Bloc_moteur *_motors;
     Timer time;
-    double _sampling_time = 10; // echantillonnage en ms
+    double _sampling_time = 10000; // echantillonnage en us
     double _last_t;
 
     bool premiere_ligne_droite = false;
@@ -74,7 +75,7 @@ private:
     //commande vitess
     float vitesse_G;
     float vitesse_D;
-    float Kpp = 0.0005;//0.005
+    float Kpp = 0.005;//0.005
     float Kdp = 40.0; // 10.0
     void bridage_moteur(int vmax);
     long int nbr_tick_D_prec;

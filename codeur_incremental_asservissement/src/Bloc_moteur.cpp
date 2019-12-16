@@ -117,17 +117,17 @@ void Bloc_moteur::commande_vitesse(float vitesse_G, float vitesse_D)
     {
         vitesse_local_G = PWM_MAX;
     }
-    if (abs(vitesse_G) < 10)
+    if (abs(vitesse_G) < 5)
     {
-        vitesse_local_G = 10;
+        vitesse_local_G = 5;
     }
     if (abs(vitesse_D) > PWM_MAX)
     {
         vitesse_local_D = PWM_MAX;
     }
-    if (abs(vitesse_D) < 10)
+    if (abs(vitesse_D) < 5)
     {
-        vitesse_local_D = 10;
+        vitesse_local_D = 5;
     };
     int VG_int = (int)vitesse_local_G * sens_G * COEFF_MOTEUR_G;
     int VD_int = (int)vitesse_local_D * sens_D * COEFF_MOTEUR_D;
@@ -144,6 +144,6 @@ void Bloc_moteur::commande_vitesse(float vitesse_G, float vitesse_D)
         VD_int += 1;
     }
     //printf("vitesseG : %f, vitesseD : %f, %d, %d", VG_f, VD_f, VG_int, VD_int);
-    set_PWM_moteur_G(-VG_int/4); //le branchements des moteurs est à vérifier ( fonctionne dans l'état actuel du robots
-    set_PWM_moteur_D(-VD_int/4); //
+    set_PWM_moteur_G(-VG_int/1.0); //le branchements des moteurs est à vérifier ( fonctionne dans l'état actuel du robots
+    set_PWM_moteur_D(-VD_int/1.0); //
 }
