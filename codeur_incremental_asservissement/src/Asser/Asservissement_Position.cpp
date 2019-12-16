@@ -13,6 +13,8 @@ Asservissement_Position::Asservissement_Position()
 
     _info_consigne = new Transform;
     _consigne = State::NONE;
+
+    time.start();
 }
 
 Asservissement_Position::~Asservissement_Position()
@@ -24,7 +26,7 @@ Asservissement_Position::~Asservissement_Position()
     delete _info_consigne;
 }
 
-void Asservissement_Position::actualise_position()
+void Asservissement_Position::_actualise_position()
 {
     /*
     on suppose les valeurs de vd et vg constantes pendant t, la trajectoire decrite par le robot est alors un cercle
@@ -89,7 +91,7 @@ void Asservissement_Position::actualise_position()
     //printf("tick d : %d, tick g : %d, x : %lf, y : %lf. angle : %lf\n", nbr_tick_D, nbr_tick_G, x_actuel, y_actuel, angle*180/PI);
 }
 
-/*void Asservissement_Position::actualise_position()
+/*void Asservissement_Position::_actualise_position()
 {
     // (Hugo:) VERSION PERSO POUR COMPRENDRE CELLE QU'ON UTILISE, PAS TERMINEE, PASSEZ VOTRE CHEMIN
     if(_check_sampling_time())
@@ -139,7 +141,7 @@ void Asservissement_Position::rotation_rel(double angle_vise)
     }
     while ((sens * diff_angle(get_angle_deg(), angle_vise) > 0) || abs(diff_angle(get_angle_deg(), angle_vise)) > 100)
     {
-        actualise_position();
+        _actualise_position();
         vitesse = 3 * sens * abs(diff_angle(get_angle_deg(), angle_vise));
         if (vitesse > 90)
         {
@@ -162,7 +164,7 @@ bool Asservissement_Position::ligne_droite_basique(double distance)
     _motors->motors_on();
     if (premiere_ligne_droite)
     {
-        actualise_position();
+        _actualise_position();
         create_repere_local();
         update_position_local();
         premiere_ligne_droite = false;
@@ -170,7 +172,7 @@ bool Asservissement_Position::ligne_droite_basique(double distance)
 
     if (distance - x_local > 0)
     {
-        actualise_position();
+        _actualise_position();
         update_position_local();
         vitesse_G = (distance - x_local) / 70;
         vitesse_D = vitesse_G;
@@ -191,7 +193,7 @@ bool Asservissement_Position::ligne_droite_basique(double distance)
 
 void Asservissement_Position::rotation_abs(double angle_vise)
 {
-    actualise_position();
+    _actualise_position();
     double angle_rel = borne_angle_d(angle_vise - get_angle_deg());
     rotation_rel(angle_rel);
 }
@@ -228,90 +230,115 @@ void Asservissement_Position::bridage_moteur(int vmax)
     }
 }
 
-bool Asservissement_Position::go_to_target()
+void Asservissement_Position::idle()
 {
-    actualise_position();
-
-    Vector2 consigne_locale(_info_consigne->get_x() - _transform->get_x(), _info_consigne->get_y() - _transform->get_y());
-    double delta_angle_consigne = shortest_delta_angle(consigne_locale.calculate_angle() - _transform->get_angle());
-    double distance_to_target = consigne_locale.Magnitude();    
-    printf("state:%d\na:%lf\ndelta:%lf\ndist:%lf\n\n", _consigne, _transform->get_angle()*180/PI, delta_angle_consigne*180/PI, distance_to_target);
-    //printf("%lf %lf %lf %lf %lf %lf delta:%lf\n", _transform->get_x(), _transform->get_y(), _transform->get_angle()*180/PI, _info_consigne->get_x(), _info_consigne->get_y(), _info_consigne->get_angle()*180/PI, delta_angle_consigne);
-
-
-    if(distance_to_target > 5000.0)
+    if(_check_sampling_time())
     {
-        double signG = 1.0;
-        double signD = 1.0;
-        if(delta_angle_consigne < -PI/4)
-        {
-            signD = -1.0;
-        }
-        else if(delta_angle_consigne > PI/4)
-        {
-            signG = -1.0;
-        }
-
-        vitesse_G = distance_to_target * 0.006f;
-        vitesse_D = distance_to_target * 0.006f;
-        bridage_moteur(300);
-
-        double target_local_x = (consigne_locale.get_x() * cos(delta_angle_consigne) + consigne_locale.get_y() * sin(delta_angle_consigne));
-        double target_local_y = (consigne_locale.get_y() * cos(delta_angle_consigne) - consigne_locale.get_x() * sin(delta_angle_consigne));
-
-        vitesse_G += + Kpp * target_local_y - Kdp * delta_angle_consigne;
-        vitesse_D += - Kpp * target_local_y + Kdp * delta_angle_consigne;
-
-        vitesse_G *= signG;
-        vitesse_D *= signD;
-        bridage_moteur(300);
-        _motors->motors_on();
-        //_motors->motors_stop_hard_hiz();
-        _motors->commande_vitesse(vitesse_G, vitesse_D);
-
-        return false;
+        _actualise_position();
     }
     else
     {
-        _motors->commande_vitesse(0, 0);
-        _motors->motors_stop_hard_hiz();
-        _consigne = State::IDLE;
-        return true;
+        
+    }
+}
+
+bool Asservissement_Position::go_to_target()
+{
+    if(_check_sampling_time())
+    {
+        _actualise_position();
+
+        Vector2 consigne_locale(_info_consigne->get_x() - _transform->get_x(), _info_consigne->get_y() - _transform->get_y());
+        double delta_angle_consigne = _shortest_delta_angle(consigne_locale.calculate_angle() - _transform->get_angle());
+        double distance_to_target = consigne_locale.Magnitude();    
+        //printf("state:%d\na:%lf\ndelta:%lf\ndist:%lf\n\n", _consigne, _transform->get_angle()*180/PI, delta_angle_consigne*180/PI, distance_to_target);
+        printf("%lf %lf %lf %lf %lf %lf delta:%lf\n", _transform->get_x(), _transform->get_y(), _transform->get_angle()*180/PI, _info_consigne->get_x(), _info_consigne->get_y(), _info_consigne->get_angle()*180/PI, delta_angle_consigne);
+
+
+        if(distance_to_target > 500.0)
+        {
+            double signG = 1.0;
+            double signD = 1.0;
+            if(delta_angle_consigne < -PI/4)
+            {
+                signD = -1.0;
+            }
+            else if(delta_angle_consigne > PI/4)
+            {
+                signG = -1.0;
+            }
+
+            vitesse_G = distance_to_target * 0.006f;
+            vitesse_D = distance_to_target * 0.006f;
+            bridage_moteur(300);
+
+            double target_local_x = (consigne_locale.get_x() * cos(delta_angle_consigne) + consigne_locale.get_y() * sin(delta_angle_consigne));
+            double target_local_y = (consigne_locale.get_y() * cos(delta_angle_consigne) - consigne_locale.get_x() * sin(delta_angle_consigne));
+
+            vitesse_G += + Kpp * target_local_y - Kdp * delta_angle_consigne;
+            vitesse_D += - Kpp * target_local_y + Kdp * delta_angle_consigne;
+
+            vitesse_G *= signG;
+            vitesse_D *= signD;
+            bridage_moteur(300);
+            //_motors->motors_on();
+            _motors->motors_stop_hard_hiz();
+            _motors->commande_vitesse(vitesse_G, vitesse_D);
+
+            return false;
+        }
+        else
+        {
+            _motors->commande_vitesse(0, 0);
+            _motors->motors_stop_hard_hiz();
+            _consigne = State::IDLE;
+            return true;
+        }
+    }
+    else
+    {
+
     }
     
     
 }
 
-bool straight_line(double distance)
+bool _straight_line(double distance)
 {
     
 }
 
 bool Asservissement_Position::turn_to_abs_angle()
 {
-    actualise_position();
-
-    double delta_angle_consigne = shortest_delta_angle(_info_consigne->get_angle() - _transform->get_angle());
-    printf("state:%d\na:%lf\ndelta:%lf\n\n", _consigne, _transform->get_angle()*180/PI, delta_angle_consigne*180/PI);
-    //printf("%lf %lf %lf %lf %lf %lf\n", _transform->get_x(), _transform->get_y(), _transform->get_angle()*180/PI, _info_consigne->get_x(), _info_consigne->get_y(), _info_consigne->get_angle()*180/PI);
-
-    if(abs(delta_angle_consigne) > PI/48.0)
+    if(_check_sampling_time())
     {
-        vitesse_G = - (delta_angle_consigne) * Kdp/2.0;
-        vitesse_D = + (delta_angle_consigne) * Kdp/2.0;
-        bridage_moteur(300);
-        _motors->motors_on();
-        //_motors->motors_stop_hard_hiz();
-        _motors->commande_vitesse(vitesse_G, vitesse_D);
+        _actualise_position();
 
-        return false;
+        double delta_angle_consigne = _shortest_delta_angle(_info_consigne->get_angle() - _transform->get_angle());
+        //printf("state:%d\na:%lf\ndelta:%lf\n\n", _consigne, _transform->get_angle()*180/PI, delta_angle_consigne*180/PI);
+        printf("%lf %lf %lf %lf %lf %lf\n", _transform->get_x(), _transform->get_y(), _transform->get_angle()*180/PI, _info_consigne->get_x(), _info_consigne->get_y(), _info_consigne->get_angle()*180/PI);
+
+        if(abs(delta_angle_consigne) > PI/48.0)
+        {
+            vitesse_G = - (delta_angle_consigne) * Kdp/2.0;
+            vitesse_D = + (delta_angle_consigne) * Kdp/2.0;
+            bridage_moteur(300);
+            //_motors->motors_on();
+            _motors->motors_stop_hard_hiz();
+            _motors->commande_vitesse(vitesse_G, vitesse_D);
+
+            return false;
+        }
+        else
+        {
+            _motors->commande_vitesse(0, 0);
+            _motors->motors_stop_hard_hiz();
+            _consigne = State::IDLE;
+            return true;
+        }
     }
     else
     {
-        _motors->commande_vitesse(0, 0);
-        _motors->motors_stop_hard_hiz();
-        _consigne = State::IDLE;
-        return true;
     }
 }
 
@@ -331,7 +358,7 @@ Vector2 Asservissement_Position::get_delta_to_consigne()
     return delta_to_consigne;
 }
 
-double Asservissement_Position::shortest_delta_angle(double delta_angle)
+double Asservissement_Position::_shortest_delta_angle(double delta_angle)
 {
     if(delta_angle < -PI)
     {
