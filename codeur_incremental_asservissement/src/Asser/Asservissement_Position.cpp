@@ -251,6 +251,7 @@ bool Asservissement_Position::go_to_target()
         Vector2 consigne_locale(_info_consigne->get_x() - _transform->get_x(), _info_consigne->get_y() - _transform->get_y());
         double delta_angle_consigne = _shortest_delta_angle(consigne_locale.calculate_angle() - _transform->get_angle());
         double distance_to_target = consigne_locale.Magnitude();    
+        
         //printf("state:%d\na:%lf\ndelta:%lf\ndist:%lf\n\n", _consigne, _transform->get_angle()*180/PI, delta_angle_consigne*180/PI, distance_to_target);
         printf("%lf %lf %lf %lf %lf %lf delta:%lf\n", _transform->get_x(), _transform->get_y(), _transform->get_angle()*180/PI, _info_consigne->get_x(), _info_consigne->get_y(), _info_consigne->get_angle()*180/PI, delta_angle_consigne);
 
@@ -272,7 +273,6 @@ bool Asservissement_Position::go_to_target()
             vitesse_D = distance_to_target * 0.006f;
             bridage_moteur(300);
 
-            double target_local_x = (consigne_locale.get_x() * cos(delta_angle_consigne) + consigne_locale.get_y() * sin(delta_angle_consigne));
             double target_local_y = (consigne_locale.get_y() * cos(delta_angle_consigne) - consigne_locale.get_x() * sin(delta_angle_consigne));
 
             vitesse_G += + Kpp * target_local_y - Kdp * delta_angle_consigne;

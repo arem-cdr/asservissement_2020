@@ -73,10 +73,11 @@ private:
     double y_local;
     void update_position_local();
     //commande vitess
-    float vitesse_G;
-    float vitesse_D;
-    float Kpp = 0.005;//0.005
-    float Kdp = 40.0; // 10.0
+    double vitesse_G;
+    double vitesse_D;
+    double Kpp = 0.005;//0.005
+    double Kdp = 40.0; // 10.0
+    double Kip = 0.0;
     void bridage_moteur(int vmax);
     long int nbr_tick_D_prec;
     long int nbr_tick_G_prec;

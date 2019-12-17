@@ -16,7 +16,7 @@ int main()
   bool go = false;
 
   //Asservissement_Position asser;
-  Asser_Vitesse asserV(10);
+  Asser_Vitesse asserV(5);
   //Asser_Polaire asserP;
 
   while (!go)
@@ -46,7 +46,7 @@ int main()
     delta_to_target = asser.get_delta_to_consigne();
   }*/
 
-  asserV.set_consignes(60, 120);
+  asserV.set_consignes(20, 40);
   while(1)
   {
     asserV._update_asser();
